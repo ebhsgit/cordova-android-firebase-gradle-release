@@ -132,19 +132,16 @@ function processPackages(){
         }
         version = versionMap[packageId];
         libraryId = componentMap[packageId];
-        packagePatternStr = libraryId+':'+packageId+':([\\d.+]+)';
+        packagePatternStr = libraryId+':'+packageId+'(?:-ktx)?'+':([\\d.+]+)';
         packagePatternRegExp = new RegExp(packagePatternStr, 'g');
-        newPackageVersion = libraryId+':'+packageId+':'+version;
+        newPackageVersion = libraryId+':'+packageId+'-ktx'+':'+version;
 
         // search build.gradle for packages
         matches = buildGradle.match(packagePatternRegExp);
         if(matches){
-            matches.forEach(function(match){
-                if(match === newPackageVersion) return;
-                log("overriding "+match+" in build.gradle with "+newPackageVersion);
-                shouldForceResolution = true;
-                forceResolutionPackages[packageId] = newPackageVersion;
-            });
+            log("overriding ["+matches+"] in build.gradle with "+newPackageVersion);
+            shouldForceResolution = true;
+            forceResolutionPackages[packageId] = newPackageVersion;
         }
     }
 
