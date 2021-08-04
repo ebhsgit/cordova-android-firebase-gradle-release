@@ -125,6 +125,23 @@ function processPackages(){
         forceResolutionPackages = {},
         matches,
         shouldForceResolution = false;
+
+    var replacePackage = (pkId) => {
+        packagePatternStr = libraryId+':'+pkId+':([\\d.+]+)';
+        packagePatternRegExp = new RegExp(packagePatternStr, 'g');
+        newPackageVersion = libraryId+':'+pkId+':'+version;
+        newPackageVersionKtx = libraryId+':'+pkId+':'+version;
+
+        // search build.gradle for packages
+        matches = buildGradle.match(packagePatternRegExp);
+        if(matches){
+            log("overriding ["+matches+"] in build.gradle with "+newPackageVersion);
+            shouldForceResolution = true;
+            forceResolutionPackages[pkId] = newPackageVersion;
+            forceResolutionPackages[pkId+'-ktx'] = newPackageVersionKtx;
+        }
+    }
+
     for(packageId in componentMap){
         if(!versionMap[packageId]){
             log("WARNING: no version found for package '"+packageId+"'");
@@ -132,17 +149,9 @@ function processPackages(){
         }
         version = versionMap[packageId];
         libraryId = componentMap[packageId];
-        packagePatternStr = libraryId+':'+packageId+'(?:-ktx)?'+':([\\d.+]+)';
-        packagePatternRegExp = new RegExp(packagePatternStr, 'g');
-        newPackageVersion = libraryId+':'+packageId+'-ktx'+':'+version;
 
-        // search build.gradle for packages
-        matches = buildGradle.match(packagePatternRegExp);
-        if(matches){
-            log("overriding ["+matches+"] in build.gradle with "+newPackageVersion);
-            shouldForceResolution = true;
-            forceResolutionPackages[packageId] = newPackageVersion;
-        }
+        replacePackage(packageId);
+        replacePackage(packageId+'-ktx');
     }
 
     // Generate override gradle for found packages
